@@ -206,6 +206,21 @@ class RiftScene extends Phaser.Scene {
     this.g.lineStyle(2,0x5d47b5,.55);this.g.strokeEllipse(550,467,650,68);
     this.g.lineStyle(1,0x36d9ff,.32);this.g.strokeEllipse(550,468,490,42);
     for(let i=0;i<12;i++){const rx=85+i*78;this.g.lineStyle(1,0x8c68ff,.22);this.g.lineBetween(rx,420,rx+((i%2)?-24:24),620);}
+    const energy=.5+.5*Math.sin(this.time.now/330);
+    for(let side=0;side<2;side++){
+      const px=side?1010:90;
+      this.g.fillStyle(side?0xff477d:0x38dcff,.08+energy*.05);this.g.fillEllipse(px,350,118,220);
+      this.g.fillStyle(0x11172d,.95);this.g.fillRoundedRect(px-22,250,44,170,8);
+      this.g.lineStyle(3,side?0xff5c8e:0x48e7ff,.6+energy*.3);this.g.strokeRoundedRect(px-22,250,44,170,8);
+      this.g.fillStyle(side?0xff6c9a:0x67efff,.22+energy*.18);this.g.fillRect(px-7,265,14,130);
+      for(let k=0;k<5;k++){this.g.fillStyle(side?0xff7ca5:0x80f4ff,.45);this.g.fillCircle(px,276+k*28+Math.sin(this.time.now/160+k)*3,3);}
+      this.g.lineStyle(2,side?0xff6a9b:0x59eaff,.22+energy*.22);this.g.strokeCircle(px,350,72+energy*8);
+    }
+    this.g.lineStyle(3,0x9876ff,.18+energy*.18);this.g.strokeEllipse(550,190,300+energy*12,238+energy*8);
+    this.g.lineStyle(1,0x4feaff,.2);this.g.strokeEllipse(550,190,360,278);
+    for(let k=0;k<12;k++){const angle=this.time.now/1700+k*Math.PI/6,rx=550+Math.cos(angle)*178,ry=190+Math.sin(angle)*112;this.g.fillStyle(k%2?0x65eaff:0xb58aff,.5);this.g.fillCircle(rx,ry,2.2);}
+    for(let k=0;k<9;k++){const xx=130+k*105;this.g.lineStyle(2,0x6d62c8,.25+energy*.16);this.g.lineBetween(xx,428,xx+((k%2)?-24:24),610);this.g.fillStyle(k%2?0x45ddff:0x9b71ff,.14+energy*.08);this.g.fillCircle(xx,438,4);}
+    this.g.fillStyle(0x8a63ff,.05+energy*.035);this.g.fillEllipse(550,482,780,45);
     if(this.mode==='menu'){this.drawMenu();return;}
     if(this.mode==='select'){this.drawCharacterSelect();return;}
     this.drawFighter(this.player,true);this.drawFighter(this.cpu,false);
@@ -329,6 +344,26 @@ class RiftScene extends Phaser.Scene {
     this.text(550,78,'ROUND 01',11,'#a8a5c9','Orbitron','center');
   }
 
+  drawPortrait(x:number,y:number,ch:typeof CHARACTERS[number],r=17){
+    const g=this.g;
+    // Small illustrated fighter bust, color-coded to the character rather than initials.
+    g.fillStyle(ch.dark,.98);g.fillCircle(x,y,r+1);
+    g.fillStyle(ch.color,.22);g.fillCircle(x,y,r-2);
+    g.lineStyle(1.5,ch.color,.95);g.strokeCircle(x,y,r);
+    g.fillStyle(ch.color,1);g.fillEllipse(x,y+r*.72,r*1.55,r*.8);
+    g.fillStyle(0xffd7c4,1);g.fillEllipse(x,y-r*.08,r*.92,r*1.13);
+    g.fillStyle(ch.hair,1);g.beginPath();g.moveTo(x-r*.52,y-r*.23);g.lineTo(x-r*.83,y-r*.88);g.lineTo(x-r*.28,y-r*.67);g.lineTo(x-r*.12,y-r*1.12);g.lineTo(x+r*.12,y-r*.67);g.lineTo(x+r*.62,y-r*.98);g.lineTo(x+r*.52,y-r*.25);g.closePath();g.fillPath();
+    g.fillStyle(ch.dark,1);g.fillRoundedRect(x-r*.48,y-r*.12,r*.96,r*.17,2);
+    g.fillStyle(0x111426,1);g.fillCircle(x-r*.22,y-r*.02,1.5);g.fillCircle(x+r*.22,y-r*.02,1.5);
+    g.lineStyle(1.5,ch.color,.95);g.lineBetween(x-r*.18,y+r*.25,x+r*.18,y+r*.25);
+    if(ch.series==='NARUTO'){g.fillStyle(0xc4cbd8,1);g.fillRoundedRect(x-r*.48,y-r*.43,r*.96,4,2);}
+    else if(ch.series==='ONE PIECE'){g.lineStyle(2,ch.color,1);g.strokeEllipse(x,y-r*.15,r*1.2,r*.55);}
+    else if(ch.series==='JUJUTSU KAISEN'){g.fillStyle(ch.dark,1);g.fillRoundedRect(x-r*.58,y-r*.34,r*1.16,5,2);}
+    else if(ch.series==='ATTACK ON TITAN'){g.fillStyle(0xd8c9a6,1);g.fillRoundedRect(x-r*.55,y+r*.35,r*1.1,4,1);}
+    else if(ch.series==='MY HERO ACADEMIA'){g.fillStyle(ch.color,1);g.fillTriangle(x-r*.7,y-r*.3,x-r*.95,y-r*.7,x-r*.35,y-r*.52);}
+    else if(ch.series==='BLACK CLOVER'){g.lineStyle(2,ch.color,1);g.strokeCircle(x+r*.55,y-r*.48,3);}
+    else {g.fillStyle(ch.color,1);g.fillCircle(x+r*.56,y-r*.5,3);}
+  }
   drawCharacterSelect(){
     this.g.fillStyle(0x050713,.82);this.g.fillRoundedRect(24,18,W-48,H-36,16);
     this.g.lineStyle(1,0x6253a5,.8);this.g.strokeRoundedRect(24,18,W-48,H-36,16);
@@ -342,11 +377,9 @@ class RiftScene extends Phaser.Scene {
       this.g.fillStyle(p1?0x43201f:p2?0x1b2850:0x11162a,.96);
       this.g.fillRoundedRect(x,y,164,45,6);
       this.g.fillStyle(ch.color,1);this.g.fillRoundedRect(x,y,5,45,3);
-      this.g.fillStyle(ch.dark,.9);this.g.fillCircle(x+25,y+22,15);
-      this.g.lineStyle(2,ch.color,.95);this.g.strokeCircle(x+25,y+22,14);
-      this.text(x+25,y+22,ch.short.slice(0,2),11,'#ffffff','Orbitron','center');
-      this.text(x+47,y+15,ch.name,10,'#f2f2ff','Rajdhani');
-      this.text(x+47,y+32,ch.series,8,'#9da5c8','Orbitron');
+      this.drawPortrait(x+25,y+22,ch,17);
+      this.text(x+48,y+15,ch.name,10,'#f2f2ff','Rajdhani');
+      this.text(x+48,y+32,ch.series,8,'#9da5c8','Orbitron');
       if(p1){this.g.lineStyle(2,0xff665e,1);this.g.strokeRoundedRect(x-1,y-1,166,47,6);this.text(x+148,y+8,'P1',8,'#ff9b93','Orbitron','right');}
       if(p2){this.g.lineStyle(2,0x5d9dff,1);this.g.strokeRoundedRect(x-1,y-1,166,47,6);this.text(x+148,y+8,'AI',8,'#8ebdff','Orbitron','right');}
     });
