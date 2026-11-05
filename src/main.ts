@@ -29,6 +29,7 @@ class RiftScene extends Phaser.Scene {
     this.input.on('pointerdown',(p:Phaser.Input.Pointer)=>this.pointer(p.x,p.y));
     this.input.on('pointerup',()=>{if(this.mode==='fight')this.player.blocking=false;});
     this.input.keyboard!.on('keydown-ENTER',()=>{if(this.mode==='menu')this.openSelect();else if(this.mode==='select'){if(this.selectionStep===2)this.startFight();else this.autoSelectNext();}else if(this.mode==='result')this.openSelect();});
+    this.input.keyboard!.on('keydown-ESC',()=>{if(this.mode==='select')this.showMenu();else if(this.mode==='fight')this.player.blocking=false;});
     this.input.keyboard!.on('keydown-SPACE',()=>{if(this.mode==='result')this.startFight();});
     this.scale.on('resize',()=>this.draw());
     this.showMenu();
@@ -138,7 +139,7 @@ class RiftScene extends Phaser.Scene {
     const elapsed=a.attackClock-a.attack;
     const active=a.attackKind==='light'?.10:a.attackKind==='heavy'?.18:a.attackKind==='special'?.28:.48;
     if(elapsed<active||elapsed>active+.13)return;
-    const range=a.attackKind==='special'?260:a.attackKind==='ultimate'?340:a.attackKind==='heavy'?155:125;
+    const range=(a.attackKind==='special'?260:a.attackKind==='ultimate'?340:a.attackKind==='heavy'?155:125)*profile.reach;
     if(Math.abs(a.x-b.x)<range&&Math.abs(a.y-b.y)<115&&a.facing===(b.x>a.x?1:-1)){
       a.hitDone=true;
       const profile=getCharacter(a.characterId);
@@ -286,6 +287,32 @@ class RiftScene extends Phaser.Scene {
       g.lineStyle(ultimate?13:special?8:5,color,.88);
       g.beginPath();g.arc(cx+dir*12,base-92,radius,dir===1?-1.12:2.02,dir===1?.85:4.25);g.strokePath();
       g.lineStyle(2,trim,.9);g.lineBetween(cx+dir*22,base-116,cx+dir*(radius+28),base-136);
+      if(special||ultimate){
+        const targetX=cx+dir*(radius*.8), targetY=base-92;
+        if(character.series==='ONE PIECE'){
+          g.fillStyle(character.color,ultimate?.32:.22);g.fillEllipse(targetX,targetY,ultimate?118:78,ultimate?78:48);
+          for(let i=0;i<5;i++){g.lineStyle(3+i,character.hair,.5);g.lineBetween(cx+dir*24,targetY-20+i*9,targetX+dir*(i*8),targetY-34+i*13);}
+        }else if(character.series==='NARUTO'){
+          g.fillStyle(0x7edcff,ultimate?.38:.25);g.fillCircle(targetX,targetY,ultimate?52:34);
+          g.lineStyle(4,0x9deaff,.8);g.strokeCircle(targetX,targetY,ultimate?65:43);
+          for(let i=0;i<8;i++){const a=i*Math.PI/4;g.lineBetween(targetX+Math.cos(a)*42,targetY+Math.sin(a)*42,targetX+Math.cos(a)*72,targetY+Math.sin(a)*72);}
+        }else if(character.series==='MY HERO ACADEMIA'){
+          g.fillStyle(0xffc35d,.3);g.fillCircle(targetX,targetY,ultimate?70:45);
+          for(let i=0;i<12;i++){const a=i*Math.PI/6;g.fillTriangle(targetX+Math.cos(a)*26,targetY+Math.sin(a)*26,targetX+Math.cos(a)*70,targetY+Math.sin(a)*70,targetX+Math.cos(a+.2)*43,targetY+Math.sin(a+.2)*43);}
+        }else if(character.series==='BLACK CLOVER'){
+          g.lineStyle(ultimate?12:7,0x171322,.9);g.beginPath();g.arc(targetX,targetY,ultimate?74:48,0,Math.PI*2);g.strokePath();
+          g.lineStyle(3,character.color,.9);g.strokeCircle(targetX,targetY,ultimate?83:55);
+        }else if(character.series==='SOLO LEVELING'){
+          for(let i=0;i<7;i++){const px=targetX+Math.cos(i*Math.PI/3.5)*52,py=targetY+Math.sin(i*Math.PI/3.5)*35;g.fillStyle(character.color,.65);g.fillTriangle(px,py-24,px-12,py+15,px+13,py+12);}
+        }else if(character.series==='ATTACK ON TITAN'){
+          g.fillStyle(0xd8e0e8,.24);for(let i=0;i<8;i++)g.fillCircle(targetX+Math.sin(i*4)*34,targetY-30-i*5,14+i*2);
+          g.lineStyle(3,0xe8e8df,.6);g.strokeCircle(targetX,targetY,ultimate?78:52);
+        }else{
+          g.fillStyle(0x9b70ff,.28);g.fillCircle(targetX,targetY,ultimate?78:48);
+          g.lineStyle(5,0xd3b5ff,.9);g.strokeCircle(targetX,targetY,ultimate?68:42);
+          g.lineStyle(2,0x7a4fff,.8);for(let i=0;i<6;i++){const a=i*Math.PI/3;g.lineBetween(targetX+Math.cos(a)*22,targetY+Math.sin(a)*22,targetX+Math.cos(a)*92,targetY+Math.sin(a)*92);}
+        }
+      }
       if(ultimate){g.lineStyle(4,0xffffff,.55);g.strokeCircle(cx+dir*92,base-91,38+Math.sin(this.time.now/35)*9);}
     }
   }
@@ -294,6 +321,10 @@ class RiftScene extends Phaser.Scene {
     this.bar(42,52,420,18,this.player.hp,0x35dfff);this.bar(638,52,420,18,this.cpu.hp,0xff477d,true);
     this.bar(42,78,260,8,this.player.energy,0x8e61ff);this.bar(798,78,260,8,this.cpu.energy,0xffa0c0,true);
     this.text(42,98,'RIFT ENERGY',10,'#9c9dbd','Orbitron');this.text(1058,98,'RIFT ENERGY',10,'#9c9dbd','Orbitron','right');
+    this.text(42,116,getCharacter(this.player.characterId).special.toUpperCase(),9,'#8cefff','Orbitron');
+    this.text(1058,116,getCharacter(this.cpu.characterId).special.toUpperCase(),9,'#ff9ab5','Orbitron','right');
+    this.text(42,132,'ULT: '+getCharacter(this.player.characterId).ultimate.toUpperCase(),8,'#9d8bff','Orbitron');
+    this.text(1058,132,'ULT: '+getCharacter(this.cpu.characterId).ultimate.toUpperCase(),8,'#c99aff','Orbitron','right');
     this.text(550,45,String(Math.ceil(this.timeLeft)).padStart(2,'0'),28,'#fff','Orbitron','center');
     this.text(550,78,'ROUND 01',11,'#a8a5c9','Orbitron','center');
   }
