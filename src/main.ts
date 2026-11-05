@@ -139,10 +139,10 @@ class RiftScene extends Phaser.Scene {
     const elapsed=a.attackClock-a.attack;
     const active=a.attackKind==='light'?.10:a.attackKind==='heavy'?.18:a.attackKind==='special'?.28:.48;
     if(elapsed<active||elapsed>active+.13)return;
+    const profile=getCharacter(a.characterId);
     const range=(a.attackKind==='special'?260:a.attackKind==='ultimate'?340:a.attackKind==='heavy'?155:125)*profile.reach;
     if(Math.abs(a.x-b.x)<range&&Math.abs(a.y-b.y)<115&&a.facing===(b.x>a.x?1:-1)){
       a.hitDone=true;
-      const profile=getCharacter(a.characterId);
       const baseDamage=a.attackKind==='light'?7:a.attackKind==='heavy'?13:a.attackKind==='special'?18:34;
       const damage=baseDamage*profile.power;
       const blocked=b.blocking&&b.facing===(a.x>b.x?1:-1);
