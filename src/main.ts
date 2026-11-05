@@ -342,10 +342,26 @@ class RiftScene extends Phaser.Scene {
     if(f.blocking){g.lineStyle(4,trim,.8);g.strokeCircle(cx,base-88,61);g.lineStyle(1,0xffffff,.6);g.strokeCircle(cx,base-88,68);}
     if(f.attack>0){
       const ultimate=f.attackKind==='ultimate', special=f.attackKind==='special';
+      const progress=clamp((f.attackClock-f.attack)/Math.max(.01,f.attackClock),0,1);
+      const snap=Math.sin(progress*Math.PI);
       const color=ultimate?0xffffff:primary, radius=ultimate?170:special?118:f.attackKind==='heavy'?83:62;
+      const fistX=cx+dir*(34+snap*48), fistY=base-91-snap*10;
+      // Moving limb, after-image streaks, and a timed slash arc (not a static attack icon).
+      g.lineStyle(16,shadow,1);g.lineBetween(cx+dir*14,base-105,fistX-dir*5,fistY+3);
+      g.lineStyle(11,primary,1);g.lineBetween(cx+dir*14,base-105,fistX-dir*5,fistY+3);
+      g.fillStyle(0xffdfcb,1);g.fillCircle(fistX,fistY,9+snap*2);
+      for(let trail=0;trail<3;trail++){
+        g.lineStyle(3-trail*.6,color,.35-trail*.07);
+        g.lineBetween(fistX-dir*(18+trail*13),fistY+(trail-1)*7,fistX-dir*(48+trail*18),fistY+(trail-1)*12);
+      }
       g.fillStyle(color,ultimate?.22:.12);g.fillCircle(cx+dir*radius*.38,base-91,radius*.55);
       g.lineStyle(ultimate?13:special?8:5,color,.88);
       g.beginPath();g.arc(cx+dir*12,base-92,radius,dir===1?-1.12:2.02,dir===1?.85:4.25);g.strokePath();
+      if(['zoro','law','sasuke','asta','yami','igris','chaehaein','levi','mikasa','yuta','toji'].includes(id)){
+        g.lineStyle(ultimate?10:6,character.hair,.95);
+        g.beginPath();g.arc(cx+dir*18,base-92,radius*.92,dir===1?-1.0:2.14,dir===1?.78:4.14);g.strokePath();
+        g.lineStyle(2,0xffffff,.8);g.lineBetween(cx+dir*22,base-120,cx+dir*(radius+24),base-145);
+      }
       g.lineStyle(2,trim,.9);g.lineBetween(cx+dir*22,base-116,cx+dir*(radius+28),base-136);
       if(special||ultimate){
         const targetX=cx+dir*(radius*.8), targetY=base-92;
