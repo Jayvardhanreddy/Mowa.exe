@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
 import './style.css';
+import { CHARACTERS, getCharacter } from './characters';
 
 type Fighter = {
-  x:number; y:number; vx:number; vy:number; hp:number; energy:number;
+  characterId:string; x:number; y:number; vx:number; vy:number; hp:number; energy:number;
   facing:number; grounded:boolean; blocking:boolean; attack:number; attackKind:string;
   attackClock:number; cooldown:number; hitDone:boolean; dash:number; stun:number;
 };
@@ -11,7 +12,8 @@ const W=1100, H=620, FLOOR=510;
 const clamp=(v:number,a:number,b:number)=>Math.max(a,Math.min(b,v));
 
 class RiftScene extends Phaser.Scene {
-  mode:'menu'|'fight'|'result'='menu';
+  mode:'menu'|'select'|'fight'|'result'='menu';
+  selectedPlayerId='luffy'; selectedCpuId='naruto'; selectionStep:0|1|2=0;
   g!:Phaser.GameObjects.Graphics;
   ui!:Phaser.GameObjects.Container;
   keys!:Record<string,Phaser.Input.Keyboard.Key>;
@@ -26,22 +28,37 @@ class RiftScene extends Phaser.Scene {
     this.keys=this.input.keyboard!.addKeys('W,A,S,D,J,K,L,U,SHIFT,ENTER,SPACE,ESC') as Record<string,Phaser.Input.Keyboard.Key>;
     this.input.on('pointerdown',(p:Phaser.Input.Pointer)=>this.pointer(p.x,p.y));
     this.input.on('pointerup',()=>{if(this.mode==='fight')this.player.blocking=false;});
-    this.input.keyboard!.on('keydown-ENTER',()=>{if(this.mode==='menu'||this.mode==='result')this.startFight();});
+    this.input.keyboard!.on('keydown-ENTER',()=>{if(this.mode==='menu')this.openSelect();else if(this.mode==='select'){if(this.selectionStep===2)this.startFight();else this.autoSelectNext();}else if(this.mode==='result')this.openSelect();});
     this.input.keyboard!.on('keydown-SPACE',()=>{if(this.mode==='result')this.startFight();});
     this.scale.on('resize',()=>this.draw());
     this.showMenu();
   }
   showMenu(){this.mode='menu';this.draw();}
+  openSelect(){this.mode='select';this.selectionStep=0;this.draw();}
+  autoSelectNext(){if(this.selectionStep===0){this.selectedPlayerId='luffy';this.selectionStep=1;}else if(this.selectionStep===1){this.selectedCpuId=this.selectedCpuId===this.selectedPlayerId?'gojo':'naruto';if(this.selectedCpuId===this.selectedPlayerId)this.selectedCpuId='gojo';this.selectionStep=2;}this.draw();}
+  selectCharacter(id:string){
+    if(this.selectionStep===0){this.selectedPlayerId=id;this.selectionStep=1;}
+    else if(this.selectionStep===1){if(id===this.selectedPlayerId)return;this.selectedCpuId=id;this.selectionStep=2;}
+    else {this.selectedPlayerId=id;this.selectionStep=1;}
+    this.draw();
+  }
   startFight(){
-    this.mode='fight'; this.timeLeft=90; this.winner=''; this.shake=0; this.flash=0;
-    this.player=this.makeFighter(330,1); this.cpu=this.makeFighter(770,-1);
+    if(this.selectionStep!==2){this.mode='select';this.autoSelectNext();return;}
+    this.mode='fight'; this.timeLeft=99; this.winner=''; this.shake=0; this.flash=0;
+    this.player=this.makeFighter(330,1,this.selectedPlayerId); this.cpu=this.makeFighter(770,-1,this.selectedCpuId);
     this.aiThink=0; this.last=this.time.now; this.draw();
   }
-  makeFighter(x:number,facing:number):Fighter{return {x,y:FLOOR,vx:0,vy:0,hp:100,energy:0,facing,grounded:true,blocking:false,attack:0,attackKind:'',attackClock:0,cooldown:0,hitDone:false,dash:0,stun:0};}
+  makeFighter(x:number,facing:number,characterId:string):Fighter{return {characterId,x,y:FLOOR,vx:0,vy:0,hp:100,energy:0,facing,grounded:true,blocking:false,attack:0,attackKind:'',attackClock:0,cooldown:0,hitDone:false,dash:0,stun:0};}
   pointer(x:number,y:number){
     const sx=this.scale.width/W, sy=this.scale.height/H; x/=sx; y/=sy;
-    if(this.mode==='menu' && x>390&&x<710&&y>380&&y<455) this.startFight();
-    else if(this.mode==='result' && x>365&&x<735&&y>390&&y<470) this.startFight();
+    if(this.mode==='menu' && x>360&&x<740&&y>365&&y<475) this.openSelect();
+    else if(this.mode==='select'){
+      if(y<72&&x<150){this.showMenu();return;}
+      if(y>=164&&y<=466){const col=Math.floor((x-37)/171),row=Math.floor((y-164)/51);const index=row*6+col;if(col>=0&&col<6&&row>=0&&row<6&&index<CHARACTERS.length)this.selectCharacter(CHARACTERS[index].id);}
+      else if(y>=500&&y<540){if(x<500)this.selectionStep=0;else if(x>600)this.selectionStep=1;this.draw();}
+      else if(y>=540&&x>390&&x<710&&this.selectionStep===2)this.startFight();
+    }
+    else if(this.mode==='result' && x>365&&x<735&&y>390&&y<470) this.openSelect();
     else if(this.mode==='fight'){
       if(y>H-115){
         if(x< W*.25) this.playerAction('left');
@@ -101,10 +118,11 @@ class RiftScene extends Phaser.Scene {
     if(c.stun>0||c.attack>0){c.vx*=.8;return;}
     if(this.aiThink<=0){
       this.aiThink=.24+Math.random()*.25;
-      if(dist>145){c.vx=c.facing*230;c.blocking=false;}
-      else if(Math.random()<.24){c.blocking=true;c.vx=0;}
-      else {c.blocking=false;c.vx=0;this.attack(c,dist<95&&Math.random()<.65?'light':c.energy>=100?'ultimate':Math.random()<.4?'special':'heavy');}
-      if(p.attack>0&&dist<155&&Math.random()<.55)c.blocking=true;
+      const profile=getCharacter(c.characterId);
+      if(dist>145*profile.reach){c.vx=c.facing*(185+profile.aggression*75);c.blocking=false;}
+      else if(Math.random()<profile.guard*.42){c.blocking=true;c.vx=0;}
+      else {c.blocking=false;c.vx=0;this.attack(c,dist<95&&Math.random()<.65?'light':c.energy>=100?'ultimate':Math.random()<profile.aggression*.55?'special':'heavy');}
+      if(p.attack>0&&dist<155&&Math.random()<profile.guard*.8)c.blocking=true;
     }
   }
   stepFighter(f:Fighter,dt:number){
@@ -123,7 +141,9 @@ class RiftScene extends Phaser.Scene {
     const range=a.attackKind==='special'?260:a.attackKind==='ultimate'?340:a.attackKind==='heavy'?155:125;
     if(Math.abs(a.x-b.x)<range&&Math.abs(a.y-b.y)<115&&a.facing===(b.x>a.x?1:-1)){
       a.hitDone=true;
-      const damage=a.attackKind==='light'?7:a.attackKind==='heavy'?13:a.attackKind==='special'?18:34;
+      const profile=getCharacter(a.characterId);
+      const baseDamage=a.attackKind==='light'?7:a.attackKind==='heavy'?13:a.attackKind==='special'?18:34;
+      const damage=baseDamage*profile.power;
       const blocked=b.blocking&&b.facing===(a.x>b.x?1:-1);
       b.hp=clamp(b.hp-(blocked?damage*.18:damage),0,100);
       if(!blocked){b.stun=a.attackKind==='ultimate'?.52:.18;b.vx=a.facing*(a.attackKind==='ultimate'?570:250);this.shake=a.attackKind==='ultimate'?12:5;this.flash=.6;}
@@ -186,6 +206,7 @@ class RiftScene extends Phaser.Scene {
     this.g.lineStyle(1,0x36d9ff,.32);this.g.strokeEllipse(550,468,490,42);
     for(let i=0;i<12;i++){const rx=85+i*78;this.g.lineStyle(1,0x8c68ff,.22);this.g.lineBetween(rx,420,rx+((i%2)?-24:24),620);}
     if(this.mode==='menu'){this.drawMenu();return;}
+    if(this.mode==='select'){this.drawCharacterSelect();return;}
     this.drawFighter(this.player,true);this.drawFighter(this.cpu,false);
     this.drawHud();
     if(this.mode==='result')this.drawResult();
@@ -199,11 +220,9 @@ class RiftScene extends Phaser.Scene {
   }
   drawFighter(f:Fighter,isPlayer:boolean){
     const g=this.g, x=f.x, y=f.y, dir=f.facing;
-    const primary=isPlayer?0x19c9e8:0xe83e70;
-    const shadow=isPlayer?0x07506c:0x681b3d;
-    const cloth=isPlayer?0x123b57:0x301b37;
-    const trim=isPlayer?0x9af4ff:0xffa0bd;
-    const skin=isPlayer?0xffd9c5:0xf2c5b9;
+    const character=getCharacter(f.characterId);
+    const primary=character.color, shadow=character.dark, cloth=character.dark, trim=character.hair;
+    const skin=0xffd9c5;
     const bob=f.grounded?Math.sin(this.time.now/145+(isPlayer?0:1.7))*2.5:0;
     const lean=f.attack>0?dir*(f.attackKind==='ultimate'?17:8):f.blocking?-dir*5:0;
     const cx=x+lean, base=y+bob;
@@ -243,11 +262,11 @@ class RiftScene extends Phaser.Scene {
     g.fillStyle(skin,1);g.fillEllipse(cx,base-145,34,39);
     g.fillStyle(0x15182b,1);g.fillEllipse(cx+dir*2,base-151,34,20);
     if(isPlayer){
-      poly([{x:cx-17,y:base-151},{x:cx-31,y:base-171},{x:cx-13,y:base-165},{x:cx-17,y:base-184},{x:cx-1,y:base-169},{x:cx+7,y:base-187},{x:cx+13,y:base-165},{x:cx+29,y:base-176},{x:cx+21,y:base-153},{x:cx+13,y:base-145},{x:cx-13,y:base-145}],0xe7f7ff);
+      poly([{x:cx-17,y:base-151},{x:cx-31,y:base-171},{x:cx-13,y:base-165},{x:cx-17,y:base-184},{x:cx-1,y:base-169},{x:cx+7,y:base-187},{x:cx+13,y:base-165},{x:cx+29,y:base-176},{x:cx+21,y:base-153},{x:cx+13,y:base-145},{x:cx-13,y:base-145}],character.hair);
       g.fillStyle(0x152d48,1);g.fillTriangle(cx-17,base-149,cx+18,base-149,cx+dir*29,base-139);
       g.fillStyle(0x13d8ed,1);g.fillCircle(cx+dir*7,base-145,3);
     }else{
-      poly([{x:cx-17,y:base-151},{x:cx-34,y:base-169},{x:cx-16,y:base-165},{x:cx-20,y:base-185},{x:cx-3,y:base-169},{x:cx+7,y:base-188},{x:cx+14,y:base-165},{x:cx+32,y:base-174},{x:cx+22,y:base-151},{x:cx+14,y:base-142},{x:cx-13,y:base-142}],0x26152e);
+      poly([{x:cx-17,y:base-151},{x:cx-34,y:base-169},{x:cx-16,y:base-165},{x:cx-20,y:base-185},{x:cx-3,y:base-169},{x:cx+7,y:base-188},{x:cx+14,y:base-165},{x:cx+32,y:base-174},{x:cx+22,y:base-151},{x:cx+14,y:base-142},{x:cx-13,y:base-142}],character.hair);
       g.fillStyle(0xf05b91,1);g.fillTriangle(cx-3,base-169,cx+7,base-188,cx+13,base-164);
       g.fillStyle(0x291327,1);g.fillRoundedRect(cx-17,base-143,34,12,4);
       g.lineStyle(2,0xff7ca8,1);g.lineBetween(cx-12,base-143,cx+12,base-143);
@@ -271,25 +290,63 @@ class RiftScene extends Phaser.Scene {
     }
   }
   drawHud(){
-    this.text(42,32,'RIFT RUNNER',17,'#8cefff','Orbitron');this.text(1058,32,'SHINOBI ECHO',17,'#ff8cac','Orbitron','right');
+    this.text(42,32,getCharacter(this.player.characterId).name.toUpperCase(),17,'#8cefff','Orbitron');this.text(1058,32,getCharacter(this.cpu.characterId).name.toUpperCase()+'  //  AI',17,'#ff8cac','Orbitron','right');
     this.bar(42,52,420,18,this.player.hp,0x35dfff);this.bar(638,52,420,18,this.cpu.hp,0xff477d,true);
     this.bar(42,78,260,8,this.player.energy,0x8e61ff);this.bar(798,78,260,8,this.cpu.energy,0xffa0c0,true);
     this.text(42,98,'RIFT ENERGY',10,'#9c9dbd','Orbitron');this.text(1058,98,'RIFT ENERGY',10,'#9c9dbd','Orbitron','right');
     this.text(550,45,String(Math.ceil(this.timeLeft)).padStart(2,'0'),28,'#fff','Orbitron','center');
     this.text(550,78,'ROUND 01',11,'#a8a5c9','Orbitron','center');
   }
+
+  drawCharacterSelect(){
+    this.g.fillStyle(0x050713,.82);this.g.fillRoundedRect(24,18,W-48,H-36,16);
+    this.g.lineStyle(1,0x6253a5,.8);this.g.strokeRoundedRect(24,18,W-48,H-36,16);
+    this.text(550,58,'CHOOSE YOUR FIGHTERS',28,'#f5f4ff','Orbitron','center');
+    const prompt=this.selectionStep===0?'STEP 1 / 2  —  SELECT YOUR CHARACTER':this.selectionStep===1?'STEP 2 / 2  —  SELECT THE AI OPPONENT':'MATCHUP LOCKED  —  READY TO FIGHT';
+    this.text(550,103,prompt,13,this.selectionStep===1?'#ff9cbd':'#78eaff','Orbitron','center');
+    this.text(550,133,'CLICK A PORTRAIT CARD  •  36 FIGHTERS  •  7 ANIME WORLDS',10,'#9699bd','Orbitron','center');
+    CHARACTERS.forEach((ch,i)=>{
+      const col=i%6,row=Math.floor(i/6),x=37+col*171,y=164+row*51;
+      const p1=ch.id===this.selectedPlayerId,p2=ch.id===this.selectedCpuId;
+      this.g.fillStyle(p1?0x43201f:p2?0x1b2850:0x11162a,.96);
+      this.g.fillRoundedRect(x,y,164,45,6);
+      this.g.fillStyle(ch.color,1);this.g.fillRoundedRect(x,y,5,45,3);
+      this.g.fillStyle(ch.dark,.9);this.g.fillCircle(x+25,y+22,15);
+      this.g.lineStyle(2,ch.color,.95);this.g.strokeCircle(x+25,y+22,14);
+      this.text(x+25,y+22,ch.short.slice(0,2),11,'#ffffff','Orbitron','center');
+      this.text(x+47,y+15,ch.name,10,'#f2f2ff','Rajdhani');
+      this.text(x+47,y+32,ch.series,8,'#9da5c8','Orbitron');
+      if(p1){this.g.lineStyle(2,0xff665e,1);this.g.strokeRoundedRect(x-1,y-1,166,47,6);this.text(x+148,y+8,'P1',8,'#ff9b93','Orbitron','right');}
+      if(p2){this.g.lineStyle(2,0x5d9dff,1);this.g.strokeRoundedRect(x-1,y-1,166,47,6);this.text(x+148,y+8,'AI',8,'#8ebdff','Orbitron','right');}
+    });
+    const p1=getCharacter(this.selectedPlayerId),p2=getCharacter(this.selectedCpuId);
+    this.g.fillStyle(0x171426,.95);this.g.fillRoundedRect(38,484,480,47,7);
+    this.g.fillStyle(p1.color,1);this.g.fillRect(38,484,5,47);
+    this.text(54,499,'P1  //  YOU',9,'#ff9a91','Orbitron');
+    this.text(54,518,p1.name.toUpperCase()+'  •  '+p1.title,11,'#f6f3ff','Rajdhani');
+    this.g.fillStyle(0x14182b,.95);this.g.fillRoundedRect(582,484,480,47,7);
+    this.g.fillStyle(p2.color,1);this.g.fillRect(582,484,5,47);
+    this.text(598,499,'P2  //  AI OPPONENT',9,'#8ebdff','Orbitron');
+    this.text(598,518,p2.name.toUpperCase()+'  •  '+p2.title,11,'#f6f3ff','Rajdhani');
+    this.g.fillStyle(this.selectionStep===2?0x5035a7:0x28233f,.96);this.g.fillRoundedRect(398,545,304,48,8);
+    this.g.lineStyle(2,this.selectionStep===2?0x9c80ff:0x5d527e,1);this.g.strokeRoundedRect(398,545,304,48,8);
+    this.text(550,569,this.selectionStep===2?'START BATTLE  →':'SELECT BOTH FIGHTERS',14,this.selectionStep===2?'#ffffff':'#aaa8c7','Orbitron','center');
+    this.text(550,610,'ESC  BACK TO MENU     •     CLICK P1 / P2 PANELS TO CHANGE YOUR PICKS',9,'#777d9f','Orbitron','center');
+    this.ui.setScale(this.scale.width/W,this.scale.height/H);
+  }
+
   drawMenu(){
     this.g.fillStyle(0x050713,.6);this.g.fillRect(0,0,W,H);
     this.text(550,115,'MOWA.exe PRESENTS',14,'#7e82b4','Orbitron','center');
     this.text(550,205,'ANIME RIFT',62,'#f4f5ff','Orbitron','center');
     this.text(550,258,'.exe',27,'#6deaff','Orbitron','center');
-    this.text(550,315,'TWO WORLDS. ONE BATTLEFIELD. NO RULES.',16,'#aeb4d5','Rajdhani','center');
+    this.text(550,315,'SEVEN ANIME WORLDS. ONE BATTLEFIELD.',16,'#aeb4d5','Rajdhani','center');
     this.g.lineStyle(1,0x6f54ff,.65);this.g.strokeRoundedRect(390,378,320,78,10);
     this.g.fillStyle(0x3a2c86,.6);this.g.fillRoundedRect(394,382,312,70,8);
     this.text(550,416,'ENTER THE RIFT  →',20,'#fff','Orbitron','center');
-    this.text(550,492,'PLAYER 1  //  RIFT RUNNER',12,'#6deaff','Orbitron','center');
-    this.text(550,516,'VS',12,'#777da4','Orbitron','center');
-    this.text(550,540,'CPU  //  SHINOBI ECHO',12,'#ff7da4','Orbitron','center');
+    this.text(550,492,'PICK YOUR FIGHTER  →  PICK YOUR AI OPPONENT',12,'#6deaff','Orbitron','center');
+    this.text(550,516,'36 FIGHTERS  •  7 ANIME UNIVERSES',12,'#b4a6ed','Orbitron','center');
+    this.text(550,540,'ONE PLAYER. ONE AI. NO RANDOM MATCHUPS.',12,'#ff7da4','Orbitron','center');
     this.text(550,585,'A / D MOVE   •   W JUMP   •   J LIGHT   •   K HEAVY   •   L SPECIAL   •   U ULTIMATE',11,'#737b9f','Orbitron','center');
     this.ui.setScale(this.scale.width/W,this.scale.height/H);
   }
