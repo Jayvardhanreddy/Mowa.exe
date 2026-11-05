@@ -17,7 +17,7 @@ class RiftScene extends Phaser.Scene {
   keys!:Record<string,Phaser.Input.Keyboard.Key>;
   player!:Fighter; cpu!:Fighter;
   timeLeft=90; last=0; aiThink=0; shake=0; flash=0; winner='';
-  soundOn=true; audio?:AudioContext;
+  soundOn=true; audio?:AudioContext;\n  textCache=new Map<string,Phaser.GameObjects.Text>();
   constructor(){super('rift');}
   create(){
     this.g=this.add.graphics();
@@ -138,7 +138,7 @@ class RiftScene extends Phaser.Scene {
     this.g.lineStyle(1,0xffffff,.18);this.g.strokeRoundedRect(x,y,w,h,5);
   }
   draw(){
-    if(!this.g)return;this.g.clear();this.ui.removeAll(true);
+    if(!this.g)return;this.g.clear();this.textCache.forEach(t=>t.setVisible(false));
     const sx=this.scale.width/W,sy=this.scale.height/H;
     this.g.fillGradientStyle(0x090b1b,0x090b1b,0x17102b,0x17102b,1);this.g.fillRect(0,0,W,H);
     // Rift sky and distant structures
