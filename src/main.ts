@@ -291,6 +291,51 @@ class RiftScene extends Phaser.Scene {
     g.fillStyle(isPlayer?0x25dff4:0xff5b91,1);g.fillCircle(cx+dir*8,base-146,1.8);
     g.lineStyle(2,shadow,1);g.lineBetween(cx+dir*2,base-153,cx+dir*13,base-154);
     if(isPlayer){g.lineStyle(2,0x4ca9c4,.9);g.lineBetween(cx-17,base-139,cx-10,base-135);}
+    // Signature silhouettes / gear make the roster readable at a glance.
+    const id=f.characterId, top=base-164;
+    const blade=(ox:number,oy:number,angle:number,len:number)=>{
+      g.lineStyle(5,0x242638,1);g.lineBetween(ox,oy,ox+Math.cos(angle)*len,oy+Math.sin(angle)*len);
+      g.lineStyle(2,0xe1e8f1,1);g.lineBetween(ox+2,oy-2,ox+Math.cos(angle)*len,oy+Math.sin(angle)*len);
+      g.fillStyle(0xd6c5a0,1);g.fillCircle(ox,oy,4);
+    };
+    if(id==='luffy'){
+      g.fillStyle(0x9b5428,1);g.fillEllipse(cx,top+1,49,10);g.fillStyle(0xe9bd55,1);g.fillEllipse(cx,top-4,38,15);
+      g.fillStyle(0x9b5428,1);g.fillRoundedRect(cx-20,top+2,40,4,2);g.fillStyle(0x9d2c27,1);g.fillRoundedRect(cx-22,base-81,44,5,2);
+    } else if(id==='zoro'){
+      g.fillStyle(0x263a32,1);g.fillRoundedRect(cx-18,top+1,36,6,3);
+      blade(cx-dir*18,base-76,-1.05,62);blade(cx-dir*22,base-70,-.78,58);blade(cx-dir*26,base-64,-.48,52);
+    } else if(id==='sanji'){
+      poly([{x:cx-dir*5,y:top+7},{x:cx+dir*25,y:top-2},{x:cx+dir*12,y:top+20},{x:cx-dir*1,y:top+15}],0xe9c34e);
+      g.lineStyle(2,0x33251b,1);g.strokeCircle(cx+dir*7,base-146,5);
+    } else if(id==='ace'){
+      g.fillStyle(0xe7bd65,1);g.fillEllipse(cx,top+2,40,13);g.fillStyle(0x9c6330,1);g.fillRoundedRect(cx-20,top-5,40,7,3);
+      g.fillStyle(0xe6c77d,1);g.fillCircle(cx-dir*25,base-170,4);g.fillCircle(cx+dir*25,base-170,4);
+    } else if(id==='law'){
+      g.fillStyle(0xf1eee6,1);g.fillEllipse(cx,top+1,45,15);g.fillStyle(0x292a3d,1);
+      for(let q=-2;q<=2;q++)for(let z=-1;z<=1;z++)g.fillCircle(cx+q*8,top-2+z*4,1.3);blade(cx+dir*19,base-78,-.82,77);
+    } else if(id==='shanks'){
+      g.fillStyle(0x9b343e,1);g.fillEllipse(cx,top+4,39,13);g.lineStyle(3,0xd5a6a1,1);g.lineBetween(cx+dir*2,base-153,cx+dir*13,base-139);
+    } else if(['naruto','minato','kakashi','itachi'].includes(id)){
+      g.fillStyle(0x9da8b8,1);g.fillRoundedRect(cx-22,base-158,44,7,2);g.lineStyle(1,0x35435c,1);g.strokeRoundedRect(cx-22,base-158,44,7,2);
+      if(id==='naruto')for(let q=0;q<3;q++){g.lineStyle(2,0x9b6338,1);g.lineBetween(cx-dir*11,base-137+q*5,cx-dir*3,base-134+q*5);}
+      if(id==='kakashi'){g.fillStyle(0x202b3b,1);g.fillRoundedRect(cx-18,base-139,36,12,4);}
+      if(id==='itachi'){g.fillStyle(0x7d293b,1);g.fillCircle(cx-dir*9,base-140,2);g.fillCircle(cx-dir*5,base-135,2);}
+    } else if(id==='sasuke'){blade(cx-dir*25,base-76,-.85,76);g.fillStyle(0x202a54,1);g.fillRoundedRect(cx-22,base-88,44,8,3);}
+    else if(id==='madara'){poly([{x:cx-23,y:top+8},{x:cx-35,y:base-88},{x:cx-16,y:base-104},{x:cx+20,y:base-104},{x:cx+37,y:base-88},{x:cx+23,y:top+7}],0x17151d);}
+    else if(id==='bakugo'){for(let q=0;q<5;q++){const a=-Math.PI*.9+q*.42;g.fillStyle(0xf0c16b,1);g.fillTriangle(cx+Math.cos(a)*10,top+Math.sin(a)*10,cx+Math.cos(a)*33,top+Math.sin(a)*33,cx+Math.cos(a+.2)*19,top+Math.sin(a+.2)*19);}}
+    else if(id==='todoroki'){g.fillStyle(0xe9e9ed,1);g.fillRect(cx-20,top-1,20,22);g.fillStyle(0xc84d4d,1);g.fillRect(cx,top-1,20,22);g.fillStyle(0x6ac9ff,.6);g.fillEllipse(cx-dir*32,base-75,20,38);g.fillStyle(0xff784c,.6);g.fillEllipse(cx+dir*32,base-75,20,38);}
+    else if(id==='allmight'){g.fillStyle(0xe5c04b,1);g.fillTriangle(cx-26,top+4,cx-33,top-22,cx-7,top-4);g.fillTriangle(cx+26,top+4,cx+33,top-22,cx+7,top-4);}
+    else if(['asta','yami','yuta','levi','mikasa','chaehaein'].includes(id)){blade(cx+dir*18,base-77,-.85,id==='yami'?94:70);}
+    else if(id==='gojo'){g.fillStyle(0x20213c,1);g.fillRoundedRect(cx-24,base-148,48,10,4);g.lineStyle(2,0xb9c5ff,1);g.lineBetween(cx-18,base-144,cx+18,base-144);}
+    else if(id==='sukuna'){g.lineStyle(2,0x6f253b,1);g.lineBetween(cx-dir*15,base-136,cx-dir*4,base-132);g.lineBetween(cx-dir*13,base-129,cx-dir*2,base-125);}
+    else if(id==='jinwoo'){g.lineStyle(3,0x9b7cff,.9);g.lineBetween(cx-18,base-70,cx+18,base-70);}
+    else if(id==='igris'){g.fillStyle(0x8e3446,1);g.fillRoundedRect(cx-22,base-159,44,12,3);}
+    else if(id==='beru'){g.fillStyle(0x4c3176,1);g.fillTriangle(cx-18,top+5,cx-34,top-22,cx-7,top-4);g.fillTriangle(cx+18,top+5,cx+34,top-22,cx+7,top-4);}
+    else if(id==='eren'){g.fillStyle(0x4c382c,1);g.fillEllipse(cx,top+11,23,20);}
+    else if(id==='reiner'){g.fillStyle(0x9b805e,1);g.fillRoundedRect(cx-25,base-115,50,17,5);}
+    else if(id==='deku'){g.fillStyle(0x9ce7c0,1);g.fillCircle(cx-dir*22,base-105,5);g.fillCircle(cx+dir*22,base-105,5);}
+    else if(id==='noelle'){g.fillStyle(0xd9e3f2,1);g.fillRoundedRect(cx-23,top-4,46,7,3);}
+    else if(id==='mereoleona'){for(let q=-2;q<=2;q++){g.fillStyle(0xe66a36,1);g.fillTriangle(cx+q*8,top+8,cx+q*12,top-24-Math.abs(q)*3,cx+q*8+10,top+8);}}
     g.fillStyle(primary,1);g.fillRoundedRect(cx+dir*17-5,base-106,13,17,4);
     g.lineStyle(2,trim,.9);g.strokeRoundedRect(cx+dir*17-5,base-106,13,17,4);
     g.fillStyle(trim,1);g.fillCircle(cx-dir*16,base-109,4);
