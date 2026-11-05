@@ -1,1 +1,16 @@
 :root{font-family:'Rajdhani',sans-serif;color:#f4f5ff;background:#070812;font-synthesis:none}*{box-sizing:border-box}html,body,#app{margin:0;min-height:100%;width:100%}body{min-height:100vh;background:radial-gradient(ellipse at 50% 35%,#19152f 0%,#090a16 55%,#05060d 100%);overflow-x:hidden}#app{max-width:1440px;margin:0 auto;padding:0 28px;display:flex;flex-direction:column;min-height:100vh}.topbar{height:74px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #28243f;letter-spacing:2px}.brand{font:800 20px Orbitron,sans-serif;color:#fff;text-decoration:none}.brand span{color:#66e6ff}.top-status{font:600 10px Orbitron,sans-serif;color:#777eaa;display:flex;align-items:center;gap:10px}.top-status i{width:7px;height:7px;border-radius:50%;background:#ff547e;box-shadow:0 0 12px #ff547e}.top-status b{color:#ff8eaa;font-size:9px}.sound-toggle{border:1px solid #353451;background:#111326;color:#a9b1d9;padding:9px 13px;font:600 10px Orbitron;letter-spacing:1px;cursor:pointer}#game-shell{position:relative;width:100%;max-width:1100px;aspect-ratio:1100/620;margin:34px auto 22px;border:1px solid #454064;background:#090b17;box-shadow:0 0 70px #3920a52b,0 22px 80px #0009;overflow:hidden}#game{width:100%;height:100%}#game canvas{display:block;width:100%!important;height:100%!important}.scanlines{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 3px,#0000000c 4px 5px);mix-blend-mode:screen}.corner{position:absolute;width:22px;height:22px;border-color:#68eaff;pointer-events:none}.corner-tl{top:8px;left:8px;border-top:2px solid;border-left:2px solid}.corner-br{right:8px;bottom:8px;border-right:2px solid;border-bottom:2px solid}footer{display:flex;justify-content:space-between;color:#626987;font:600 9px Orbitron;letter-spacing:1.5px;padding:8px 2px 20px}footer b{color:#8d91b7;font-weight:500;margin-left:10px}@media(max-width:700px){#app{padding:0 10px}.topbar{height:58px}.top-status{display:none}#game-shell{margin:18px auto 12px;width:100%}footer{font-size:8px;letter-spacing:.5px}footer span:last-child{display:none}}
+/* ANIME RIFT visual pass */
+:root{color-scheme:dark}
+body{background:radial-gradient(ellipse at 50% 20%,#261844 0%,#101127 38%,#03050c 100%)}
+#app{max-width:1500px}
+.topbar{border-bottom-color:#42345f}
+.topbar:after{width:52%;background:linear-gradient(90deg,#62eaff,#9671ff 48%,transparent);box-shadow:0 0 18px #64eaff88}
+.brand{letter-spacing:1.5px;text-shadow:0 0 8px #8e6bff,0 0 24px #5c4cff88}
+.sound-toggle{border-color:#66528c;background:linear-gradient(135deg,#25203f,#0b1020);box-shadow:inset 0 0 20px #8e6cff18,0 5px 20px #0008}
+#game-shell{border:1px solid #8065b9;box-shadow:0 0 0 1px #a38aff22,0 0 30px #6946c755,0 0 110px #4422a344,0 24px 70px #000c}
+#game-shell:after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 0%,#8b6dff12,transparent 52%),linear-gradient(135deg,#6deaff0c,transparent 25%,transparent 75%,#ff5c8e0b);mix-blend-mode:screen}
+.scanlines{opacity:.5}
+.corner{width:32px;height:32px}
+footer{color:#8b8db3}
+footer b{color:#b8b4e2}
+@media(max-width:700px){#game-shell{box-shadow:0 0 25px #6946c755}}
