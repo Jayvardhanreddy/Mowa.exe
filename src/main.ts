@@ -23,7 +23,7 @@ class RiftScene extends Phaser.Scene {
     this.g=this.add.graphics();
     this.ui=this.add.container(0,0);
     this.keys=this.input.keyboard!.addKeys('W,A,S,D,J,K,L,U,SHIFT,ENTER,SPACE,ESC') as Record<string,Phaser.Input.Keyboard.Key>;
-    this.input.on('pointerdown',(p:Phaser.Input.Pointer)=>this.pointer(p.x,p.y));
+    this.input.on('pointerdown',(p:Phaser.Input.Pointer)=>this.pointer(p.x,p.y));\n    this.input.keyboard!.on('keydown-ENTER',()=>{if(this.mode==='menu'||this.mode==='result')this.startFight();});\n    this.input.keyboard!.on('keydown-SPACE',()=>{if(this.mode==='result')this.startFight();});
     this.scale.on('resize',()=>this.draw());
     this.showMenu();
   }
@@ -85,7 +85,7 @@ class RiftScene extends Phaser.Scene {
     if(Phaser.Input.Keyboard.JustDown(k.W)&&p.grounded){p.vy=-650;p.grounded=false;this.sfx(260);}
     p.blocking=k.S.isDown;
     if(k.A.isDown)p.vx=-340;else if(k.D.isDown)p.vx=340;
-    if(Phaser.Input.Keyboard.JustDown(k.SHIFT)&&p.cooldown<=0){p.dash=.16;p.vx=p.facing*-850;this.sfx(120);}
+    if(Phaser.Input.Keyboard.JustDown(k.SHIFT)&&p.cooldown<=0){p.dash=.16;p.vx=p.facing*850;this.sfx(120);}
     if(Phaser.Input.Keyboard.JustDown(k.J))this.attack(p,'light');
     if(Phaser.Input.Keyboard.JustDown(k.K))this.attack(p,'heavy');
     if(Phaser.Input.Keyboard.JustDown(k.L))this.attack(p,'special');
